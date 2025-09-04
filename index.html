@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>World Clocks - Airport Style</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      /* Colourful gradient background */
+      background: linear-gradient(135deg, #c52f09, #e06d15, #21b3b8, #9c1686,#FFFFFFFF);
+      background-size: 400% 400%;
+      animation: gradientBG 15s ease infinite;
+      color: white;
+      text-align: center;
+    }
+
+    /* Animation for moving gradient */
+    @keyframes gradientBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    h1 {
+      margin: 20px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      padding: 05px;
+    }
+    .clock {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 10px;
+      border-radius: 12px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.3 );
+    }
+    .city {
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    canvas {
+      background: white;
+      border-radius: 50%;
+    }
+    .time {
+      margin-top: 9px;
+      font-size: 1.1em;
+    }
+    footer {
+      margin-top: 30px;
+      padding: 15px;
+      background: rgba(0, 0, 0, 0.7);
+      border-top: 2px solid #fff;
+      font-size: 1em;
+    }
+  </style>
+</head>
+<body>
+  <img src="VU.png" alt="VU" width="500px" height="150px">
+  <h1>Vignan's Foundation for Science, Technology & Research </h1>
+  <h3>Developed By: Students Of III-CSBS</h3>
+
+  <div class="grid" id="grid"></div>
+
+  <footer>
+    Guided By: <strong>Amarendra Sir</strong>
+  </footer>
+
+  <script>
+    const cities = [
+      { name: "New York", tz: "America/New_York" },
+      { name: "London", tz: "Europe/London" },
+      { name: "Paris", tz: "Europe/Paris" },
+      { name: "Dubai", tz: "Asia/Dubai" },
+      { name: "Moscow", tz: "Europe/Moscow" },
+      { name: "Mumbai", tz: "Asia/Kolkata" }
+    ];
+
+    const grid = document.getElementById("grid");
+
+    // Build clock elements
+    cities.forEach((city, i) => {
+      const div = document.createElement("div");
+      div.className = "clock";
+      div.innerHTML = `
+        <div class="city">${city.name}</div>
+        <canvas id="canvas${i}" width="150" height="150"></canvas>
+        <div class="time" id="time${i}"></div>
+      `;
+      grid.appendChild(div);
+    });
+
+    function drawClock(ctx, radius, hour, minute, second) {
+      // Clear
+      ctx.clearRect(0, 0, 300, 300);
+
+      // Draw face
+      ctx.beginPath();
+      ctx.arc(radius, radius, radius-2, 0, 2*Math.PI);
+      ctx.fillStyle = "#000";
+      ctx.fill();
+      ctx.strokeStyle = "#fff";
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      // Numbers
+      ctx.fillStyle = "white";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      for(let num=1; num<=12; num++) {
+        let ang = num * Math.PI / 6;
+        let x = radius + Math.sin(ang) * (radius-20);
+        let y = radius - Math.cos(ang) * (radius-20);
+        ctx.fillText(num, x, y);
+      }
+
+      // Hour hand
+      let hourPos = (hour%12)*Math.PI/6 + minute*Math.PI/(6*60);
+      ctx.beginPath();
+      ctx.moveTo(radius, radius);
+      ctx.lineTo(radius + Math.sin(hourPos)*(radius*0.5), radius - Math.cos(hourPos)*(radius*0.5));
+      ctx.strokeStyle = "#fff";
+      ctx.lineWidth = 5;
+      ctx.stroke();
+
+      // Minute hand
+      let minutePos = minute*Math.PI/30;
+      ctx.beginPath();
+      ctx.moveTo(radius, radius);
+      ctx.lineTo(radius + Math.sin(minutePos)*(radius*0.7), radius - Math.cos(minutePos)*(radius*0.7));
+      ctx.strokeStyle = "#0f0";
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      // Second hand
+      let secondPos = second*Math.PI/30;
+      ctx.beginPath();
+      ctx.moveTo(radius, radius);
+      ctx.lineTo(radius + Math.sin(secondPos)*(radius*0.8), radius - Math.cos(secondPos)*(radius*0.8));
+      ctx.strokeStyle = "#f00";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+
+    function updateClocks() {
+      const now = new Date();
+      cities.forEach((city, i) => {
+        const options = { timeZone: city.tz, hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" };
+        const timeStr = new Intl.DateTimeFormat("en-GB", options).format(now);
+
+        document.getElementById("time"+i).innerText = timeStr;
+
+        // Extract h/m/s for analog clock
+        const parts = timeStr.split(":");
+        const h = parseInt(parts[0]);
+        const m = parseInt(parts[1]);
+        const s = parseInt(parts[2]);
+
+        const canvas = document.getElementById("canvas"+i);
+        const ctx = canvas.getContext("2d");
+        drawClock(ctx, canvas.width/2, h, m, s);
+      });
+    }
+
+    updateClocks();
+    setInterval(updateClocks, 1000);
+  </script>
+</body>
+</html>
